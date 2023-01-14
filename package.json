@@ -12,7 +12,8 @@
     "socket.io": "^4.5.4"
   },
   "scripts": {
-    "start": "ts-node src/main.ts",
+    "dev": "NODE_ENV='dev' ts-node src/main.ts",
+    "prod": "NODE_ENV='prod' ts-node src/main.ts",
     "lint-fix": "eslint --cache --fix src/ && prettier --write src/"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import db from './repo/database'
 
 const app: Application = express();
 const PORT = 5050;
@@ -29,6 +30,7 @@ io.on("connection", (socket) => {
   console.log("a user connected");
   console.log(socket);
   socket.emit("msg", "ping");
+  db.getTasks(1)
 });
 
 try {

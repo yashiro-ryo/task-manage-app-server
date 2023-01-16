@@ -58,9 +58,18 @@ async function getTasks(projectId: number) {
   // taskの取得と結果オブジェクトの生成
   const taskResults = [];
   for (let i = 0; i < getTaskGroupResult.length; i++) {
-    const [getTaskResult]: any = await con.query(
+    let [getTaskResult]: any = await con.query(
       `select * from task where task_group_id = ${getTaskGroupResult[i].task_group_id}`
     );
+    // migrate keys
+    getTaskResult = getTaskResult.map((value: any) => {
+      return {
+        taskId: value.task_id,
+        taskText: value.task_name,
+        taskCreatedAt: "2000/09/15",
+        taskPriority: "low",
+      };
+    });
     taskResults.push({
       taskGroupId: getTaskGroupResult[i].task_group_id,
       taskGroupText: getTaskGroupResult[i].task_group_name,

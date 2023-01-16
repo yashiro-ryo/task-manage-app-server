@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import db from './repo/database'
+import db from "./repo/database";
 
 const app: Application = express();
 const PORT = 5050;
@@ -31,6 +31,14 @@ io.on("connection", (socket) => {
   console.log(socket);
   socket.emit("msg", "ping");
   db.getTasks(1)
+    .then((taskResults: any) => {
+      console.log("成功");
+      console.log(taskResults);
+      socket.emit("init-tasks", taskResults);
+    })
+    .catch((e: Error) => {
+      console.log("失敗", e);
+    });
 });
 
 try {

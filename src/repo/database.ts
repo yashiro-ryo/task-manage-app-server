@@ -1,5 +1,5 @@
 import mysql from "mysql2/promise";
-import 'dotenv/config'
+import "dotenv/config";
 
 function createConfig() {
   console.log("環境", process.env.NODE_ENV);
@@ -35,10 +35,40 @@ async function getTasks(projectId: number) {
   const dbConfig = createConfig();
   if (dbConfig === null) {
     // configが正しく表示できない場合はエラー
-    throw new Error();
+    throw new Error("cannot create config file");
   }
   const con = await mysql.createConnection(dbConfig);
-  console.log(con)
+  // project の内容を取得
+  const [getProjectInfoResult]: any = await con.query(
+    `select * from project where project_id = ${projectId}`
+  );
+  console.log(getProjectInfoResult);
+  if (getProjectInfoResult.length !== 1) {
+    throw new Error("cannot found project info");
+  }
+  const projectName = getProjectInfoResult[0].project_name;
+  // task groupの取得
+  const [getTaskGroupResult]: any = await con.query(
+    `select * from task_group where project_id = ${projectId}`
+  );
+  console.log(getTaskGroupResult);
+  if (getTaskGroupResult.length < 1) {
+    throw new Error("cannot found task group");
+  }
+  // taskの取得と結果オブジェクトの生成
+  const taskResults = [];
+  for (let i = 0; i < getTaskGroupResult.length; i++) {
+    const [getTaskResult]: any = await con.query(
+      `select * from task where task_group_id = ${getTaskGroupResult[i].task_group_id}`
+    );
+    taskResults.push({
+      taskGroupId: getTaskGroupResult[i].task_group_id,
+      taskGroupText: getTaskGroupResult[i].task_group_name,
+      tasks: getTaskResult,
+    });
+  }
+  console.log(taskResults);
+  return taskResults;
 }
 
 export default {

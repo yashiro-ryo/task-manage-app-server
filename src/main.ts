@@ -1,8 +1,9 @@
 import express, { Application } from "express";
 import http from "http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
+import { send } from "process";
 
 const app: Application = express();
 const PORT = 5050;
@@ -30,7 +31,23 @@ io.on("connection", (socket) => {
   console.log("a user connected");
   console.log(socket);
   socket.emit("msg", "ping");
-  db.getTasks(1)
+  sendTasksToClient(1, socket);
+  socket.on("create-new-task-group", (data: any) => {
+    console.log("create new task");
+    console.log(data);
+    db.createGroup(data.projectId, data.groupName)
+      .then(() => {
+        console.log("成功");
+        sendTasksToClient(data.projectId, socket);
+      })
+      .catch((e: any) => {
+        console.log("create group error", e);
+      });
+  });
+});
+
+function sendTasksToClient(projectId: number, socket: Socket) {
+  db.getTasks(projectId)
     .then((taskResults: any) => {
       console.log("成功");
       console.log(taskResults);
@@ -39,7 +56,7 @@ io.on("connection", (socket) => {
     .catch((e: Error) => {
       console.log("失敗", e);
     });
-});
+}
 
 try {
   server.listen(PORT, () => {

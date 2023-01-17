@@ -80,6 +80,17 @@ async function getTasks(projectId: number) {
   return taskResults;
 }
 
+async function createGroup(projectId: number, groupName: string) {
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    // configが正しく表示できない場合はエラー
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  con.query(`insert into task_group values (null, '${groupName}', ${projectId})`);
+}
+
 export default {
   getTasks,
+  createGroup,
 } as const;

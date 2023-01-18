@@ -59,7 +59,7 @@ async function getTasks(projectId: number) {
   const taskResults = [];
   for (let i = 0; i < getTaskGroupResult.length; i++) {
     let [getTaskResult]: any = await con.query(
-      `select * from task where task_group_id = ${getTaskGroupResult[i].task_group_id}`
+      `select * from task where task_group_id = ${getTaskGroupResult[i].task_group_id} order by task_position asc`
     );
     // migrate keys
     getTaskResult = getTaskResult.map((value: any) => {
@@ -87,7 +87,9 @@ async function createGroup(projectId: number, groupName: string) {
     throw new Error("cannot create config file");
   }
   const con = await mysql.createConnection(dbConfig);
-  con.query(`insert into task_group values (null, '${groupName}', ${projectId})`);
+  con.query(
+    `insert into task_group values (null, '${groupName}', ${projectId})`
+  );
 }
 
 export default {

@@ -62,10 +62,13 @@ async function getTasks(projectId: number) {
       `select * from task where task_group_id = ${getTaskGroupResult[i].task_group_id} order by task_position asc`
     );
     // migrate keys
+    console.log(getTaskResult);
     getTaskResult = getTaskResult.map((value: any) => {
       return {
         taskId: value.task_id,
         taskText: value.task_name,
+        taskGroupId: value.task_group_id,
+        taskPosition: value.task_position,
         taskCreatedAt: "2000/09/15",
         taskPriority: "low",
       };
@@ -92,7 +95,24 @@ async function createGroup(projectId: number, groupName: string) {
   );
 }
 
+async function createTask(
+  projectId: number,
+  taskGroupId: number,
+  taskText: string,
+  taskPosition: number
+) {
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  con.query(
+    `insert into task value (null, ${taskGroupId}, '${taskText}', ${taskPosition})`
+  );
+}
+
 export default {
   getTasks,
   createGroup,
+  createTask,
 } as const;

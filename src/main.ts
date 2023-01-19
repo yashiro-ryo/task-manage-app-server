@@ -44,6 +44,12 @@ io.on("connection", (socket) => {
         console.log("create group error", e);
       });
   });
+  socket.on("create-task", (data: any) => {
+    console.log("create task");
+    console.log(data);
+    createTask(data.projectId, data.taskGroupId, data.taskText, data.position);
+    sendTasksToClient(data.projectId, socket);
+  });
 });
 
 function sendTasksToClient(projectId: number, socket: Socket) {
@@ -55,6 +61,19 @@ function sendTasksToClient(projectId: number, socket: Socket) {
     })
     .catch((e: Error) => {
       console.log("失敗", e);
+    });
+}
+
+function createTask(
+  projectId: number,
+  taskGroupId: number,
+  taskText: string,
+  taskPosition: number
+) {
+  db.createTask(projectId, taskGroupId, taskText, taskPosition)
+    .then(() => {})
+    .catch((e) => {
+      console.log(e, "失敗");
     });
 }
 

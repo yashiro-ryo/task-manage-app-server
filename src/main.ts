@@ -57,6 +57,11 @@ io.on("connection", (socket) => {
       sendTasksToClient(data.projectId, socket);
     });
   });
+  socket.on("delete-taskgroup", (data: any) => {
+    db.deleteTaskGroup(data.taskGroupId).then(() => {
+      sendTasksToClient(data.projectId, socket);
+    });
+  });
 });
 
 function sendTasksToClient(projectId: number, socket: Socket) {

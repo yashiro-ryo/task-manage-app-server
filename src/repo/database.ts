@@ -120,9 +120,19 @@ async function deleteTask(taskId: number) {
   con.query(`delete from task where task_id = ${taskId}`);
 }
 
+async function deleteTaskGroup(taskGroupId: number) {
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  con.query(`delete from task_group where task_group_id = ${taskGroupId}`);
+}
+
 export default {
   getTasks,
   createGroup,
   createTask,
   deleteTask,
+  deleteTaskGroup
 } as const;

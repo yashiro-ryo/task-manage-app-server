@@ -50,6 +50,13 @@ io.on("connection", (socket) => {
     createTask(data.projectId, data.taskGroupId, data.taskText, data.position);
     sendTasksToClient(data.projectId, socket);
   });
+  socket.on("delete-task", (data: any) => {
+    console.log("delete task");
+    console.log(data);
+    db.deleteTask(data.taskId).then(() => {
+      sendTasksToClient(data.projectId, socket);
+    });
+  });
 });
 
 function sendTasksToClient(projectId: number, socket: Socket) {

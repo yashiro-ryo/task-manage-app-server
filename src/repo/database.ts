@@ -130,9 +130,10 @@ async function deleteTaskGroup(taskGroupId: number) {
 }
 
 export default {
+  createConfig,
   getTasks,
   createGroup,
   createTask,
   deleteTask,
-  deleteTaskGroup
+  deleteTaskGroup,
 } as const;

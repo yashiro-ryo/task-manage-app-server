@@ -16,7 +16,8 @@
   "scripts": {
     "dev": "NODE_ENV='dev' ts-node src/main.ts",
     "prod": "NODE_ENV='prod' ts-node src/main.ts",
-    "lint-fix": "eslint --cache --fix src/ && prettier --write src/"
+    "lint-fix": "eslint --cache --fix src/ && prettier --write src/",
+    "test": "jest"
   },
   "devDependencies": {
     "@types/express": "^4.17.15",

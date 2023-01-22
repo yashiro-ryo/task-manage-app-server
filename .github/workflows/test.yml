@@ -7,6 +7,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - run: yarn install
-    - run: yarn run test
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn run test
+        env:
+          DEV_DB_HOST: localhost
+          DEV_DB_USER: root
+          DEV_DB_DATABASE: task_manage_app
+          DEV_DB_PASS: hogehoge
+
+          PROD_DB_HOST: "****"
+          PROD_DB_USER: "****"
+          PROD_DB_DATABASE: "****"
+          PROD_DB_PASS: "****"

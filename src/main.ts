@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Application, Request, Response } from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
@@ -11,7 +11,7 @@ const PORT = 5050;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // clientのcssやjsなどのリソース読み込み用
-app.use(express.static("client"));
+app.use(express.static("src/client"));
 app.use(
   cors({
     origin: "http://localhost:3000", //アクセス許可するオリジン
@@ -19,6 +19,10 @@ app.use(
     optionsSuccessStatus: 200, //レスポンスstatusを200に設定
   })
 );
+
+app.get("/home/1", (req: Request, res: Response) => {
+  res.sendFile(__dirname + "/client/index.html");
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {

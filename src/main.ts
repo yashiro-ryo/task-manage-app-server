@@ -10,6 +10,8 @@ const PORT = 5050;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// clientのcssやjsなどのリソース読み込み用
+app.use(express.static("client"));
 app.use(
   cors({
     origin: "http://localhost:3000", //アクセス許可するオリジン

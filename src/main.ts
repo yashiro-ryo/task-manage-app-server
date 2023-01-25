@@ -12,13 +12,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // clientのcssやjsなどのリソース読み込み用
 app.use(express.static("src/client"));
-app.use(
-  cors({
-    origin: "http://localhost:3000", //アクセス許可するオリジン
-    credentials: true, //レスポンスヘッダーにAccess-Control-Allow-Credentials追加
-    optionsSuccessStatus: 200, //レスポンスstatusを200に設定
-  })
-);
+if (process.env.NODE_ENV === "prod") {
+  app.use(
+    cors({
+      origin: "http://160.251.45.134", //アクセス許可するオリジン
+      credentials: true, //レスポンスヘッダーにAccess-Control-Allow-Credentials追加
+      optionsSuccessStatus: 200, //レスポンスstatusを200に設定
+    })
+  );
+} else {
+  app.use(
+    cors({
+      origin: "http://localhost:3000", //アクセス許可するオリジン
+      credentials: true, //レスポンスヘッダーにAccess-Control-Allow-Credentials追加
+      optionsSuccessStatus: 200, //レスポンスstatusを200に設定
+    })
+  );
+}
 
 app.get("/home/1", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/client/index.html");

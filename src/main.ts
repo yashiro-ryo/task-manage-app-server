@@ -3,7 +3,6 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
-import { send } from "process";
 
 const app: Application = express();
 const PORT = 5050;
@@ -53,8 +52,13 @@ io.on("connection", (socket) => {
   socket.on("create-task", (data: any) => {
     console.log("create task");
     console.log(data);
-    createTask(data.projectId, data.taskGroupId, data.taskText, data.position);
-    sendTasksToClient(data.projectId, socket);
+    createTask(
+      data.projectId,
+      data.taskGroupId,
+      data.taskText,
+      data.position,
+      socket
+    );
   });
   socket.on("delete-task", (data: any) => {
     console.log("delete task");
@@ -86,10 +90,13 @@ function createTask(
   projectId: number,
   taskGroupId: number,
   taskText: string,
-  taskPosition: number
+  taskPosition: number,
+  socket: Socket
 ) {
   db.createTask(projectId, taskGroupId, taskText, taskPosition)
-    .then(() => {})
+    .then(() => {
+      sendTasksToClient(projectId, socket);
+    })
     .catch((e) => {
       console.log(e, "失敗");
     });

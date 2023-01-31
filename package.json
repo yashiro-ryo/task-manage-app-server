@@ -17,7 +17,7 @@
     "ts-jest": "^29.0.5"
   },
   "scripts": {
-    "dev": "NODE_ENV='dev' ts-node src/main.ts",
+    "dev": "NODE_ENV='dev' nodemon",
     "prod": "NODE_ENV='prod' ts-node src/main.ts",
     "lint-fix": "eslint --cache --fix src/ && prettier --write src/",
     "test": "jest"

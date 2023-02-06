@@ -1,5 +1,6 @@
 import mysql from "mysql2/promise";
 import "dotenv/config";
+import { escapeString, decodeString } from "../utils/stringHelper";
 
 function createConfig() {
   console.log("環境", process.env.NODE_ENV);
@@ -66,7 +67,7 @@ async function getTasks(projectId: number) {
     getTaskResult = getTaskResult.map((value: any) => {
       return {
         taskId: value.task_id,
-        taskText: value.task_name,
+        taskText: decodeString(value.task_name),
         taskGroupId: value.task_group_id,
         taskPosition: value.task_position,
         taskCreatedAt: "2000/09/15",
@@ -75,7 +76,7 @@ async function getTasks(projectId: number) {
     });
     taskResults.push({
       taskGroupId: getTaskGroupResult[i].task_group_id,
-      taskGroupText: getTaskGroupResult[i].task_group_name,
+      taskGroupText: decodeString(getTaskGroupResult[i].task_group_name),
       tasks: getTaskResult,
     });
   }
@@ -90,9 +91,8 @@ async function createGroup(projectId: number, groupName: string) {
     throw new Error("cannot create config file");
   }
   const con = await mysql.createConnection(dbConfig);
-  con.query(
-    `insert into task_group values (null, '${groupName}', ${projectId})`
-  );
+  const t = escapeString(groupName);
+  con.query(`insert into task_group values (null, '${t}', ${projectId})`);
 }
 
 async function createTask(
@@ -106,8 +106,9 @@ async function createTask(
     throw new Error("cannot create config file");
   }
   const con = await mysql.createConnection(dbConfig);
+  const t = escapeString(taskText);
   con.query(
-    `insert into task value (null, ${taskGroupId}, '${taskText}', ${taskPosition})`
+    `insert into task value (null, ${taskGroupId}, '${t}', ${taskPosition})`
   );
 }
 

@@ -9,7 +9,7 @@ export function escapeString(t: string): string {
     .split('"')
     .join("&quot;")
     .split("'")
-    .join("&#039;");
+    .join("&#39;");
   return localText;
 }
 
@@ -23,7 +23,7 @@ export function decodeString(t: string): string {
     .join(">")
     .split("&quot;")
     .join('"')
-    .split("&#039;")
+    .split("&#39;")
     .join("'");
   return localText;
 }

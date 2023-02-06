@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap");
+
+body {
+  background-color: #f8f7f6;
+  font-family: "M PLUS Rounded 1c", sans-serif;
+}
+
+p {
+  margin: 5px 0;
+}
+
+.signin-form {
+  margin-top: 22px;
+}
+
+.app-name {
+  font-size: 30px;
+  text-align: center;
+}
+
+.container {
+  max-width: 500px;
+}
+
+.card {
+  padding: 60px;
+}
+
+.form {
+  width: 100%;
+}
+
+.form-input {
+  width: 100%;
+  line-height: 35px;
+}
+
+.btn {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.form-footer {
+  display: inline-block;
+  text-align: center;
+}
+
+#err-msg {
+  color: #f00;
+  font-weight: bold;
+}
+
+.link-group {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}

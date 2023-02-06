@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // clientのcssやjsなどのリソース読み込み用
 app.use(express.static("src/client"));
+app.use(express.static("src/assets"));
 if (process.env.NODE_ENV === "prod") {
   app.use(
     cors({
@@ -31,6 +32,10 @@ if (process.env.NODE_ENV === "prod") {
 
 app.get("/home/1", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/client/index.html");
+});
+
+app.get("/signin", (req: Request, res: Response) => {
+  res.sendFile(__dirname + "/assets/html/signin.html");
 });
 
 const server = http.createServer(app);

@@ -9,10 +9,6 @@ p {
   margin: 5px 0;
 }
 
-.signin-form {
-  margin-top: 22px;
-}
-
 .app-name {
   font-size: 30px;
   text-align: center;
@@ -26,23 +22,12 @@ p {
   padding: 60px;
 }
 
-.form {
-  width: 100%;
+.card {
+  margin-top: 30px;
 }
 
 .form-input {
   width: 100%;
-  line-height: 35px;
-}
-
-.btn {
-  margin-top: 15px;
-  width: 100%;
-}
-
-.form-footer {
-  display: inline-block;
-  text-align: center;
 }
 
 #err-msg {
@@ -50,8 +35,17 @@ p {
   font-weight: bold;
 }
 
+.error-text {
+  color: rgb(255, 81, 81);
+  font-weight: bold;
+}
+
 .link-group {
   display: flex;
   flex-direction: column;
   text-align: center;
+}
+
+.btn {
+  width: 100%;
 }

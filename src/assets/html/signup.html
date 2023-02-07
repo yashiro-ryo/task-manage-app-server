@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <title>タスク管理アプリ | アカウント作成
+  </title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="app-name">
+      <p>アカウント作成</p>
+    </div>
+    <div class="card">
+      <form id="form">
+        <div class="mb-3">
+          <label class="form-label">名前</label>
+          <input type="text" class="form-control" id="form-name" placeholder="名前">
+          <p class="error-text" id="name-error"></p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" class="form-control" id="form-email" aria-describedby="emailHelp" placeholder="メールアドレス">
+          <p class="error-text" id="email-error"></p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">パスワード</label>
+          <input type="password" class="form-control" id="form-pass" placeholder="パスワード">
+          <div id="emailHelp" class="form-text">8文字以上の英数字</div>
+          <p class="error-text" id="pass-error"></p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">パスワード確認</label>
+          <input type="password" class="form-control" id="form-pass-confirm" placeholder="パスワード">
+          <p class="error-text" id="pass-confirm-error"></p>
+        </div>
+      </form>
+      <button type="submit" class="btn btn-primary" id="submit-btn" onclick="submit()">登録</button>
+    </div>
+    <div class="link-group">
+      <a href="/signin">ログインはこちら</a>
+      <a href="/forget">パスワードを忘れた場合はこちら</a>
+    </div>
+  </div>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.3.min.js"
+  integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+<script>
+  const jqEmail = $('#form-email')
+  const jqName = $('#form-name')
+  const jqPass = $('#form-pass')
+  const jqPassConfirm = $('#form-pass-confirm')
+  const jqError = $('#err-msg')
+  const jqSubmitBtn = $('#submit-btn')
+
+  function validation() {
+    const email = jqEmail.val()
+    const name = jqName.val()
+    const pass = jqPass.val()
+    const passConfirm = jqPassConfirm.val()
+    let hasError = false
+    if (email.length < 1) {
+      hasError = true
+      $('#email-error').text('メールアドレスが入力されていません')
+    } else {
+      $('#email-error').text('')
+    }
+    if (name.length < 1) {
+      hasError = true
+      $('#name-error').text('名前が入力されていません')
+    } else {
+      $('#name-error').text('')
+    }
+    if (pass.length < 1) {
+      hasError = true
+      $('#pass-error').text('パスワードが入力されていません')
+    } else {
+      $('#pass-error').text('')
+    }
+    if (passConfirm.length < 1) {
+      hasError = true
+      $('#pass-confirm-error').text('パスワード確認が入力されていません')
+    } else {
+      $('#pass-confirm-error').text('')
+    }
+    if (pass != passConfirm) {
+      hasError = true
+      $('#pass-confirm-error').text('パスワードが一致しません')
+    }
+    if (hasError) {
+      return false
+    }
+    return true
+  }
+
+  function submit() {
+    if (!validation()) {
+      return
+    }
+    jqSubmitBtn.text('登録中...')
+    jqSubmitBtn.attr('disabled', true)
+    const email = jqEmail.val()
+    const name = jqName.val()
+    const pass = jqPass.val()
+    const result = confirm(`以下の内容で登録します\r\n名前: ${name}\r\nメールアドレス: ${email}\r\nパスワード: 入力した内容`)
+    if (result) {
+      // axios
+      console.log('axios')
+    } else {
+      // canceled
+      jqSubmitBtn.text('登録')
+      jqSubmitBtn.attr('disabled', false)
+    }
+  }
+</script>
+
+</html>

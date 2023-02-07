@@ -38,6 +38,10 @@ app.get("/signin", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signin.html");
 });
 
+app.get("/signup", (req: Request, res: Response) => {
+  res.sendFile(__dirname + "/assets/html/signup.html");
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

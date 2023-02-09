@@ -3,7 +3,6 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
-import { send } from "process";
 
 const app: Application = express();
 const PORT = 5050;
@@ -12,6 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // clientのcssやjsなどのリソース読み込み用
 app.use(express.static("src/client"));
+app.use(express.static("src/assets"));
 if (process.env.NODE_ENV === "prod") {
   app.use(
     cors({
@@ -32,6 +32,14 @@ if (process.env.NODE_ENV === "prod") {
 
 app.get("/home/1", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/client/index.html");
+});
+
+app.get("/signin", (req: Request, res: Response) => {
+  res.sendFile(__dirname + "/assets/html/signin.html");
+});
+
+app.get("/signup", (req: Request, res: Response) => {
+  res.sendFile(__dirname + "/assets/html/signup.html");
 });
 
 const server = http.createServer(app);
@@ -63,8 +71,13 @@ io.on("connection", (socket) => {
   socket.on("create-task", (data: any) => {
     console.log("create task");
     console.log(data);
-    createTask(data.projectId, data.taskGroupId, data.taskText, data.position);
-    sendTasksToClient(data.projectId, socket);
+    createTask(
+      data.projectId,
+      data.taskGroupId,
+      data.taskText,
+      data.position,
+      socket
+    );
   });
   socket.on("delete-task", (data: any) => {
     console.log("delete task");
@@ -96,10 +109,13 @@ function createTask(
   projectId: number,
   taskGroupId: number,
   taskText: string,
-  taskPosition: number
+  taskPosition: number,
+  socket: Socket
 ) {
   db.createTask(projectId, taskGroupId, taskText, taskPosition)
-    .then(() => {})
+    .then(() => {
+      sendTasksToClient(projectId, socket);
+    })
     .catch((e) => {
       console.log(e, "失敗");
     });

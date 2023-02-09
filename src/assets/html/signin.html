@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <title>タスク管理アプリ | ログイン
+  </title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="signin-form">
+      <div class="app-name">
+        <p>タスク管理アプリ</p>
+      </div>
+      <div class="card">
+        <form id="form">
+          <div class="mb-3">
+            <label class="form-label">メールアドレス</label>
+            <input type="email" class="form-control" aria-describedby="emailHelp" placeholder="メールアドレス" id="form-email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">パスワード</label>
+            <input type="password" class="form-control" placeholder="パスワード" id="form-pass">
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input">
+            <label class="form-check-label" id="form-save-signin-info">ログイン情報を保存する</label>
+          </div>
+        </form>
+        <p id="err-msg"></p>
+        <button id="submit-btn" class="btn btn-primary" onClick="submit()">ログイン</button>
+      </div>
+      <div class="link-group">
+        <a href="signup">アカウント新規作成</a>
+        <a href="forget">パスワードを忘れた場合はこちら</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+    integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+  <script>
+    const jqEmailForm = $('#form-email')
+    const jqPassForm = $('#form-pass')
+    const jqForm = $('#form')
+    jqForm.keyup(() => {
+      jqError.text('')
+    })
+    const jqSubmitBtn = $('#submit-btn')
+    const jqError = $('#err-msg')
+
+    function validation() {
+      const email = jqEmailForm.val()
+      const pass = jqPassForm.val()
+      if (email.length < 1 || pass.length < 1) {
+        jqError.text('メールアドレスかパスワードが入力されていません.')
+        return false
+      }
+      return true
+    }
+
+    function submit() {
+      if (!validation()) {
+        return
+      }
+      jqSubmitBtn.text('ログイン中...').attr('disabled', true)
+      // axios
+    }
+  </script>
+</body>
+
+</html>

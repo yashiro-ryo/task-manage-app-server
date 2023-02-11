@@ -71,13 +71,7 @@ io.on("connection", (socket) => {
   socket.on("create-task", (data: any) => {
     console.log("create task");
     console.log(data);
-    createTask(
-      data.projectId,
-      data.taskGroupId,
-      data.taskText,
-      data.position,
-      socket
-    );
+    createTask(data.projectId, data.taskGroupId, data.taskText, data.position);
   });
   socket.on("delete-task", (data: any) => {
     console.log("delete task");
@@ -98,7 +92,6 @@ function sendTasksToClient(projectId: number, io: Server) {
     .then((taskResults: any) => {
       console.log("成功");
       console.log(taskResults);
-      //socket.emit("init-tasks", taskResults);
       io.emit("init-tasks", taskResults);
     })
     .catch((e: Error) => {
@@ -110,8 +103,7 @@ function createTask(
   projectId: number,
   taskGroupId: number,
   taskText: string,
-  taskPosition: number,
-  socket: Socket
+  taskPosition: number
 ) {
   db.createTask(projectId, taskGroupId, taskText, taskPosition)
     .then(() => {

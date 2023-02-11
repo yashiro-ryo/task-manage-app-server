@@ -55,14 +55,14 @@ io.on("connection", (socket) => {
   console.log("a user connected");
   console.log(socket);
   socket.emit("msg", "ping");
-  sendTasksToClient(1, socket, io);
+  sendTasksToClient(1, io);
   socket.on("create-new-task-group", (data: any) => {
     console.log("create new task");
     console.log(data);
     db.createGroup(data.projectId, data.groupName)
       .then(() => {
         console.log("成功");
-        sendTasksToClient(data.projectId, socket, io);
+        sendTasksToClient(data.projectId, io);
       })
       .catch((e: any) => {
         console.log("create group error", e);
@@ -83,17 +83,17 @@ io.on("connection", (socket) => {
     console.log("delete task");
     console.log(data);
     db.deleteTask(data.taskId).then(() => {
-      sendTasksToClient(data.projectId, socket, io);
+      sendTasksToClient(data.projectId, io);
     });
   });
   socket.on("delete-taskgroup", (data: any) => {
     db.deleteTaskGroup(data.taskGroupId).then(() => {
-      sendTasksToClient(data.projectId, socket, io);
+      sendTasksToClient(data.projectId, io);
     });
   });
 });
 
-function sendTasksToClient(projectId: number, socket: Socket, io: Server) {
+function sendTasksToClient(projectId: number, io: Server) {
   db.getTasks(projectId)
     .then((taskResults: any) => {
       console.log("成功");
@@ -115,7 +115,7 @@ function createTask(
 ) {
   db.createTask(projectId, taskGroupId, taskText, taskPosition)
     .then(() => {
-      sendTasksToClient(projectId, socket, io);
+      sendTasksToClient(projectId, io);
     })
     .catch((e) => {
       console.log(e, "失敗");

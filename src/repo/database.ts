@@ -45,7 +45,7 @@ async function getTasks(projectId: number) {
   );
   console.log(getProjectInfoResult);
   if (getProjectInfoResult.length !== 1) {
-    throw new Error("cannot found project info");
+    return Promise.reject({ errorType: "invalid-projectId" });
   }
   const projectName = getProjectInfoResult[0].project_name;
   // task groupの取得
@@ -81,7 +81,7 @@ async function getTasks(projectId: number) {
     });
   }
   console.log(taskResults);
-  return taskResults;
+  return Promise.resolve(taskResults);
 }
 
 async function createGroup(projectId: number, groupName: string) {

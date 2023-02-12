@@ -83,6 +83,10 @@
           userPassHashed: passwordHashed
         }).then((result) => {
           console.log(result)
+          if (result.data.result.hasError) {
+            jqError.text(result.data.result.errorMsg)
+            jqSubmitBtn.text('ログイン').attr('disabled', false)
+          }
         }).catch((e) => {
           console.error(e)
         })

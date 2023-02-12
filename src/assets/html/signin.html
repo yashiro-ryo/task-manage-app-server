@@ -43,6 +43,7 @@
   <!-- jquery -->
   <script src="https://code.jquery.com/jquery-3.6.3.min.js"
     integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     const jqEmailForm = $('#form-email')
     const jqPassForm = $('#form-pass')
@@ -63,12 +64,29 @@
       return true
     }
 
+    async function sha256(text) {
+      const uint8 = new TextEncoder().encode(text)
+      const digest = await crypto.subtle.digest('SHA-256', uint8)
+      return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2, '0')).join('')
+    }
+
     function submit() {
       if (!validation()) {
         return
       }
       jqSubmitBtn.text('ログイン中...').attr('disabled', true)
-      // axios
+      // password hash
+      sha256(jqPassForm.val()).then((passwordHashed) => {
+        // post signin data
+        axios.post('http://localhost:5050/auth/signin', {
+          userEmail: jqEmailForm.val(),
+          userPassHashed: passwordHashed
+        }).then((result) => {
+          console.log(result)
+        }).catch((e) => {
+          console.error(e)
+        })
+      })
     }
   </script>
 </body>

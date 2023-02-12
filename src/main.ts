@@ -3,6 +3,7 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
+import { token } from "./auth/token";
 
 const app: Application = express();
 const PORT = 5050;
@@ -40,6 +41,11 @@ app.get("/signin", (req: Request, res: Response) => {
 
 app.get("/signup", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signup.html");
+});
+
+app.post("/auth/signin", (req: Request, res: Response) => {
+  console.log(req.body);
+  res.send("pok");
 });
 
 const server = http.createServer(app);

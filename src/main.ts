@@ -106,6 +106,8 @@ function sendTasksToClient(projectId: number, io: Server) {
       if (e.errorType === "invalid-projectId") {
         // TODO: ioだと接続しているユーザー全てに配信されてしまうので修正する
         io.emit("error-invalid-projectId");
+      } else {
+        io.emit("error");
       }
     });
 }

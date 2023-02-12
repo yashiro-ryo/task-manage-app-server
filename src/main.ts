@@ -4,6 +4,7 @@ import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
 import { auth } from "./auth/auth";
+import { token } from "./auth/token";
 
 const app: Application = express();
 const PORT = 5050;
@@ -49,11 +50,15 @@ app.post("/auth/signin", (req: Request, res: Response) => {
     .checkEmailAndPass(req.body.userEmail, req.body.userPassHashed)
     .then((userId: number) => {
       console.log("認証成功 :" + userId);
-      res.send({ result: "ok" });
+      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
+      // cookieに格納
+      res.send({ result: { hasError: false, errorMsg: "" } });
     })
     .catch((error) => {
       console.error("auth error: " + error.errorType);
-      res.send({ result: "ng" });
+      res.send({
+        result: { hasError: true, errorMsg: "認証に失敗しました。" },
+      });
     });
 });
 

@@ -13,12 +13,27 @@ class Token {
     this.SECRET_KEY = fs.readFileSync("keys/private.key");
   }
 
-  createAccessToken(payload: Payload) {
+  createToken(payload: Payload, tokenType: "access" | "reflesh") {
+    let tokenExpired;
+    if (tokenType === "access") {
+      tokenExpired = this.ACCESS_TOKEN_EXPIRED;
+    } else {
+      tokenExpired = this.REFLESH_TOKEN_EXPIRED;
+    }
     const token = jwt.sign(payload, this.SECRET_KEY, {
-      expiresIn: this.ACCESS_TOKEN_EXPIRED,
+      expiresIn: tokenExpired,
       algorithm: "RS256",
     });
     return token;
+  }
+
+  createAccessTokenAndRefleshToken(payload: Payload) {
+    const accessToken = this.createToken(payload, "access");
+    const refleshToken = this.createToken(payload, "reflesh");
+    return {
+      accessToken: accessToken,
+      refleshToken: refleshToken,
+    };
   }
 
   async verifyToken(token: string) {

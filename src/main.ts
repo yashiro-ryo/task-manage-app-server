@@ -3,7 +3,7 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
-import { token } from "./auth/token";
+import { auth } from "./auth/auth";
 
 const app: Application = express();
 const PORT = 5050;
@@ -45,7 +45,16 @@ app.get("/signup", (req: Request, res: Response) => {
 
 app.post("/auth/signin", (req: Request, res: Response) => {
   console.log(req.body);
-  res.send("pok");
+  auth
+    .checkEmailAndPass(req.body.userEmail, req.body.userPassHashed)
+    .then((userId: number) => {
+      console.log("認証成功 :" + userId);
+      res.send({ result: "ok" });
+    })
+    .catch((error) => {
+      console.error("auth error: " + error.errorType);
+      res.send({ result: "ng" });
+    });
 });
 
 const server = http.createServer(app);

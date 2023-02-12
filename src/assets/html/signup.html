@@ -49,6 +49,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.3.min.js"
   integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
   const jqEmail = $('#form-email')
   const jqName = $('#form-name')
@@ -97,6 +98,12 @@
     return true
   }
 
+  async function sha256(text) {
+    const uint8 = new TextEncoder().encode(text)
+    const digest = await crypto.subtle.digest('SHA-256', uint8)
+    return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2, '0')).join('')
+  }
+
   function submit() {
     if (!validation()) {
       return
@@ -109,7 +116,22 @@
     const result = confirm(`以下の内容で登録します\r\n名前: ${name}\r\nメールアドレス: ${email}\r\nパスワード: 入力した内容`)
     if (result) {
       // axios
-      console.log('axios')
+      sha256(jqPass.val()).then((passwordHashed) => {
+        // post signin data
+        axios.post('http://localhost:5050/auth/signup', {
+          userName: jqName.val(),
+          userEmail: jqEmail.val(),
+          userPassHashed: passwordHashed
+        }).then((result) => {
+          console.log(result)
+          if (result.data.result.hasError) {
+            jqError.text(result.data.result.errorMsg)
+            jqSubmitBtn.text('ログイン').attr('disabled', false)
+          }
+        }).catch((e) => {
+          console.error(e)
+        })
+      })
     } else {
       // canceled
       jqSubmitBtn.text('登録')

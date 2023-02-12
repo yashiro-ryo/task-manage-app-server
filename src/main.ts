@@ -62,6 +62,10 @@ app.post("/auth/signin", (req: Request, res: Response) => {
     });
 });
 
+app.post("/auth/signup", (req: Request, res: Response) => {
+  console.log(req.body);
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

@@ -11,7 +11,6 @@ import fs from "fs";
 const app: Application = express();
 const PORT = 5050;
 
-const secretKey = fs.readFileSync("keys/private.key");
 const sessionOptions = {
   secret: "secret",
   cookie: { maxAge: 60 * 60 * 1000 },

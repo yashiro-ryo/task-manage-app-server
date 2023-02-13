@@ -1,13 +1,23 @@
 import express, { Application, Request, Response } from "express";
+import session from "express-session";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
 import { auth } from "./auth/auth";
 import { token } from "./auth/token";
+import fs from "fs";
 
 const app: Application = express();
 const PORT = 5050;
+
+const secretKey = fs.readFileSync("keys/private.key");
+const sessionOptions = {
+  secret: "secret",
+  cookie: { maxAge: 60 * 60 * 1000 },
+};
+
+app.use(session(sessionOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -33,6 +43,7 @@ if (process.env.NODE_ENV === "prod") {
 }
 
 app.get("/home/1", (req: Request, res: Response) => {
+  console.log("session id: " + req.session.id);
   res.sendFile(__dirname + "/client/index.html");
 });
 
@@ -46,6 +57,7 @@ app.get("/signup", (req: Request, res: Response) => {
 
 app.post("/auth/signin", (req: Request, res: Response) => {
   console.log(req.body);
+  console.log("signin user session id: " + req.session.id);
   auth
     .checkEmailAndPass(req.body.userEmail, req.body.userPassHashed)
     .then((userId: number) => {
@@ -64,6 +76,7 @@ app.post("/auth/signin", (req: Request, res: Response) => {
 
 app.post("/auth/signup", (req: Request, res: Response) => {
   console.log(req.body);
+  console.log("signup user session id: " + req.session.id);
   auth
     .createUser(req.body.userName, req.body.userEmail, req.body.userPassHashed)
     .then((userId: number) => {

@@ -86,6 +86,8 @@
           if (result.data.result.hasError) {
             jqError.text(result.data.result.errorMsg)
             jqSubmitBtn.text('ログイン').attr('disabled', false)
+          } else {
+            window.location.href = 'http://localhost:5050/home'
           }
         }).catch((e) => {
           console.error(e)

@@ -42,7 +42,12 @@ if (process.env.NODE_ENV === "prod") {
   );
 }
 
-app.get("/home/1", (req: Request, res: Response) => {
+app.get("/home/:projectId", (req: Request, res: Response) => {
+  console.log("session id: " + req.session.id);
+  res.sendFile(__dirname + "/client/index.html");
+});
+
+app.get("/home", (req: Request, res: Response) => {
   console.log("session id: " + req.session.id);
   res.sendFile(__dirname + "/client/index.html");
 });
@@ -63,13 +68,20 @@ app.post("/auth/signin", (req: Request, res: Response) => {
     .then((userId: number) => {
       console.log("認証成功 :" + userId);
       const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
-      auth.saveTokenAndSessionId(
-        tokens.accessToken,
-        tokens.refleshToken,
-        req.session.id
-      );
-      // cookieに格納
-      res.send({ result: { hasError: false, errorMsg: "" } });
+      auth
+        .saveTokenAndSessionId(
+          tokens.accessToken,
+          tokens.refleshToken,
+          req.session.id
+        )
+        .then(() => {
+          res.send({
+            result: {
+              hasError: false,
+              errorMsg: "",
+            },
+          });
+        });
     })
     .catch((error) => {
       console.error("auth error: " + error.errorType);

@@ -124,6 +124,7 @@ class Auth {
               )
                 .then(() => {
                   // ログイン完了とする
+                  console.log("successful signin with reflesh token");
                   return Promise.resolve();
                 })
                 .catch((e) => {

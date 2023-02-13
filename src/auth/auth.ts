@@ -107,7 +107,7 @@ class Auth {
         if (e.errorType === "token-is-expired") {
           console.log("token is expired");
           // reflesh tokenの検証
-          token
+          return token
             .verifyToken(tokens[0].reflesh_token)
             .then(() => {
               console.log("create new token");

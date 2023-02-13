@@ -37,9 +37,13 @@ class Token {
   }
 
   async verifyToken(token: string) {
-    return await jwt.verify(token, this.SECRET_KEY, (error: any, _) => {
-      if (error) {
-        return Promise.reject({ errorType: "failed-verify-token" });
+    return await jwt.verify(token, this.SECRET_KEY, (e: any, _) => {
+      if (e instanceof jwt.TokenExpiredError) {
+        console.error("トークンの有効期限が切れています。", e);
+        return Promise.reject({ errorType: "token-was-expired" });
+      } else if (e instanceof jwt.JsonWebTokenError) {
+        console.error("トークンが不正です。", e);
+        return Promise.reject({ errorType: "invalid-token" });
       } else {
         return Promise.resolve();
       }

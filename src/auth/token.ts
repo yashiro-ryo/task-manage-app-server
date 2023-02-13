@@ -40,7 +40,7 @@ class Token {
     return await jwt.verify(token, this.SECRET_KEY, (e: any, _) => {
       if (e instanceof jwt.TokenExpiredError) {
         console.error("トークンの有効期限が切れています。", e);
-        return Promise.reject({ errorType: "token-was-expired" });
+        return Promise.reject({ errorType: "token-is-expired" });
       } else if (e instanceof jwt.JsonWebTokenError) {
         console.error("トークンが不正です。", e);
         return Promise.reject({ errorType: "invalid-token" });

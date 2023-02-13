@@ -64,6 +64,29 @@ app.post("/auth/signin", (req: Request, res: Response) => {
 
 app.post("/auth/signup", (req: Request, res: Response) => {
   console.log(req.body);
+  auth
+    .createUser(req.body.userName, req.body.userEmail, req.body.userPassHashed)
+    .then((userId: number) => {
+      console.log("crfeated user id = " + userId);
+    })
+    .catch((err) => {
+      if (err.errorType === "this-user-has-already-exist") {
+        res.send({
+          result: {
+            hasError: true,
+            errorMsg: "ユーザーがすでに存在します。ログインしてください。",
+          },
+        });
+      } else {
+        console.log(err);
+        res.send({
+          result: {
+            hasError: true,
+            errorMsg: "予期しないエラーが発生しました。",
+          },
+        });
+      }
+    });
 });
 
 const server = http.createServer(app);

@@ -32,6 +32,29 @@ class Auth {
       return Promise.resolve(users[0].user_id);
     }
   }
+
+  async createUser(name: string, email: string, passHashed: string) {
+    if (this.con === undefined) {
+      console.error("failed-initialize-connection");
+      return Promise.reject({ errorType: "failed-initialize-connection" });
+    }
+    const [users]: any = await this.con.query(
+      `select * from user where user_email = '${email}'`
+    );
+    if (users.length !== 0) {
+      console.error("this-user-has-already-exist");
+      return Promise.reject({ errorType: "this-user-has-already-exist" });
+    }
+    // create user
+    await this.con.query(
+      `insert into user (user_id, user_name, user_email, user_pass_hashed) value (null, '${name}', '${email}', '${passHashed}');`
+    );
+    const [user]: any = await this.con.query(
+      `select user_id from user where (user_email = '${email}' and user_pass_hashed = '${passHashed}' and user_name = '${name}');`
+    );
+    console.log(user);
+    return Promise.resolve(user[0].user_id);
+  }
 }
 
 export const auth = new Auth();

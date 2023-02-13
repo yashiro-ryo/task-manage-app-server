@@ -1,12 +1,19 @@
-import express, { Application, Request, Response } from "express";
-import session from "express-session";
+import express, { Application, Request, Response, NextFunction } from "express";
+import session, { Session } from "express-session";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
 import { auth } from "./auth/auth";
 import { token } from "./auth/token";
-import fs from "fs";
+
+declare module "http" {
+  interface IncomingMessage {
+    session: Session & {
+      authenticated: boolean;
+    };
+  }
+}
 
 const app: Application = express();
 const PORT = 5050;
@@ -16,7 +23,9 @@ const sessionOptions = {
   cookie: { maxAge: 60 * 60 * 1000 },
 };
 
-app.use(session(sessionOptions));
+const sessionMiddleware = session(sessionOptions);
+
+app.use(sessionMiddleware);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -71,7 +80,8 @@ app.post("/auth/signin", (req: Request, res: Response) => {
         .saveTokenAndSessionId(
           tokens.accessToken,
           tokens.refleshToken,
-          req.session.id
+          req.session.id,
+          userId
         )
         .then(() => {
           res.send({
@@ -126,9 +136,32 @@ const io = new Server(server, {
   },
 });
 
+io.use((socket, next) =>
+  sessionMiddleware(
+    socket.request as Request,
+    {} as Response,
+    next as NextFunction
+  )
+);
+
 //クライアントと通信
 io.on("connection", (socket) => {
   console.log("a user connected");
+  console.log(socket.request.session.id);
+  auth
+    .checkSessionId(socket.request.session.id)
+    .then(() => {
+      console.log("sucessful authenticate user");
+      socketEvents(socket);
+    })
+    .catch((error) => {
+      console.log(error.errorType);
+      socket.emit("error-failed-authenticate-user");
+      socket.disconnect();
+    });
+});
+
+function socketEvents(socket: Socket) {
   socket
     .on("create-new-task-group", (data: any) => {
       console.log("create new task");
@@ -168,7 +201,7 @@ io.on("connection", (socket) => {
       console.log("get tasks");
       sendTasksToClient(data.projectId, io);
     });
-});
+}
 
 function sendTasksToClient(projectId: number, io: Server) {
   db.getTasks(projectId)

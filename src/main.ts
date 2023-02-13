@@ -63,6 +63,11 @@ app.post("/auth/signin", (req: Request, res: Response) => {
     .then((userId: number) => {
       console.log("認証成功 :" + userId);
       const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
+      auth.saveTokenAndSessionId(
+        tokens.accessToken,
+        tokens.refleshToken,
+        req.session.id
+      );
       // cookieに格納
       res.send({ result: { hasError: false, errorMsg: "" } });
     })

@@ -55,6 +55,21 @@ class Auth {
     console.log(user);
     return Promise.resolve(user[0].user_id);
   }
+
+  async saveTokenAndSessionId(
+    accessToken: string,
+    refleshToken: string,
+    sessionId: string
+  ) {
+    if (this.con === undefined) {
+      console.error("failed-initialize-connection");
+      return Promise.reject({ errorType: "failed-initialize-connection" });
+    }
+    await this.con.query(
+      `insert into session_token (access_token, reflesh_token, session_id) value ('${accessToken}', '${refleshToken}', '${sessionId}');`
+    );
+    return Promise.resolve();
+  }
 }
 
 export const auth = new Auth();

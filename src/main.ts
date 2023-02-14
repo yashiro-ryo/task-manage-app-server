@@ -6,6 +6,7 @@ import cors from "cors";
 import db from "./repo/database";
 import { auth } from "./auth/auth";
 import { token } from "./auth/token";
+import { userRights } from "./auth/userAccessRights";
 
 declare module "http" {
   interface IncomingMessage {
@@ -66,6 +67,28 @@ app.get("/signin", (req: Request, res: Response) => {
 
 app.get("/signup", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signup.html");
+});
+
+app.get("/api/v1/projects", (req: Request, res: Response) => {
+  console.log("session id: " + req.session.id);
+  auth
+    .checkSessionId(req.session.id)
+    .then((userId: number) => {
+      userRights
+        .getUserProjects(userId)
+        .then(
+          (projectInfos: Array<{ projectId: number; projectName: string }>) => {
+            console.log("response ok");
+            res.send({ hasError: false, data: projectInfos });
+          }
+        )
+        .catch(() => {
+          res.send({ hasError: true, errorMsg: "failed-authenticate-user" });
+        });
+    })
+    .catch((e) => {
+      res.json({ hasError: true, errorMsg: e.errorType });
+    });
 });
 
 app.post("/auth/signin", (req: Request, res: Response) => {

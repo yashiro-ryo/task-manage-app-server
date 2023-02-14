@@ -130,6 +130,20 @@ app.post("/auth/signup", (req: Request, res: Response) => {
     .createUser(req.body.userName, req.body.userEmail, req.body.userPassHashed)
     .then((userId: number) => {
       console.log("crfeated user id = " + userId);
+      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
+      auth
+        .saveTokenAndSessionId(
+          tokens.accessToken,
+          tokens.refleshToken,
+          req.session.id,
+          userId
+        )
+        .then(() => {
+          res.send({ result: { hasError: false } });
+        })
+        .catch((e) => {
+          res.send({ result: { hasError: true, errorType: e.errorType } });
+        });
     })
     .catch((err) => {
       if (err.errorType === "this-user-has-already-exist") {

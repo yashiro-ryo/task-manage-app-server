@@ -38,6 +38,7 @@
           <p class="error-text" id="pass-confirm-error"></p>
         </div>
       </form>
+      <p id="err-msg"></p>
       <button type="submit" class="btn btn-primary" id="submit-btn" onclick="submit()">登録</button>
     </div>
     <div class="link-group">
@@ -127,6 +128,10 @@
           if (result.data.result.hasError) {
             jqError.text(result.data.result.errorMsg)
             jqSubmitBtn.text('ログイン').attr('disabled', false)
+          } else {
+            // アカウント作成成功
+            console.log(result)
+            window.location.href = 'http://localhost:5050/home'
           }
         }).catch((e) => {
           console.error(e)

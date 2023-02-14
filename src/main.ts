@@ -185,9 +185,9 @@ io.on("connection", (socket) => {
   console.log(socket.request.session.id);
   auth
     .checkSessionId(socket.request.session.id)
-    .then(() => {
+    .then((userId: number) => {
       console.log("sucessful authenticate user");
-      socketEvents(socket);
+      socketEvents(socket, userId);
     })
     .catch((error) => {
       console.log(error.errorType);
@@ -196,7 +196,7 @@ io.on("connection", (socket) => {
     });
 });
 
-function socketEvents(socket: Socket) {
+function socketEvents(socket: Socket, userId: number) {
   socket
     .on("create-new-task-group", (data: any) => {
       console.log("create new task");
@@ -234,7 +234,16 @@ function socketEvents(socket: Socket) {
     })
     .on("get-tasks", (data: any) => {
       console.log("get tasks");
-      sendTasksToClient(data.projectId, io);
+      console.log("userId: ", userId, "projectId: ", data.projectId);
+      // 閲覧権限のチェック
+      userRights
+        .checkUserRights(userId, data.projectId)
+        .then(() => {
+          sendTasksToClient(data.projectId, io);
+        })
+        .catch(() => {
+          socket.emit("error-invalid-projectId");
+        });
     });
 }
 

@@ -41,6 +41,23 @@ class UserAccessRights {
     }
     return Promise.resolve(projectInfos);
   }
+
+  async checkUserRights(userId: number, projectId: number) {
+    if (this.con === undefined) {
+      return Promise.reject({ errorType: "failed-initialize-connection" });
+    }
+
+    const [rights]: any = await this.con.query(
+      `select user_right from user_access_rights where (user_id = ${userId} and project_id = ${projectId});`
+    );
+
+    if (rights.length === 0) {
+      return Promise.reject({
+        errorType: "this-user-cannot-access",
+      });
+    }
+    return Promise.resolve();
+  }
 }
 
 export const userRights = new UserAccessRights();

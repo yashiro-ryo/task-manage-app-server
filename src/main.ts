@@ -52,12 +52,10 @@ if (process.env.NODE_ENV === "prod") {
 }
 
 app.get("/home/:projectId", (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
   res.sendFile(__dirname + "/client/index.html");
 });
 
 app.get("/home", (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
   res.sendFile(__dirname + "/client/index.html");
 });
 

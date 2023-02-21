@@ -145,6 +145,17 @@ class Auth {
         }
       });
   }
+
+  async doSignout(sessionId: string) {
+    console.log("do signout");
+    if (this.con === undefined) {
+      console.error("failed-initialize-connection");
+      return Promise.reject({ errorType: "failed-initialize-connection" });
+    }
+
+    this.con.query(`delete from session_token where session_id = '${sessionId}'`)
+    return Promise.resolve();
+  }
 }
 
 export const auth = new Auth();

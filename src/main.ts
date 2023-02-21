@@ -163,6 +163,19 @@ app.post("/auth/signup", (req: Request, res: Response) => {
     });
 });
 
+app.get("/auth/signout", (req: Request, res: Response) => {
+  console.log("called signout");
+  console.log("session id: ", req.session.id);
+  auth
+    .doSignout(req.session.id)
+    .then(() => {
+      res.send({ result: { hasError: false, errorMsg: "" } });
+    })
+    .catch((e) => {
+      res.send({ result: { hasError: true, errorMsg: e } });
+    });
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

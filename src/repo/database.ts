@@ -130,6 +130,32 @@ async function deleteTaskGroup(taskGroupId: number) {
   con.query(`delete from task_group where task_group_id = ${taskGroupId}`);
 }
 
+type ProjectInfo = {
+  projectName: string;
+  createUserId: number;
+};
+
+async function createProject(newProjectInfo: ProjectInfo) {
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  // projectを一意にするために日時を利用する
+  const date = new Date();
+  const datetimeStr = date.toLocaleString();
+  await con.query(
+    `insert into project value (null, '${newProjectInfo.projectName}', ${newProjectInfo.createUserId}, '${datetimeStr}');`
+  );
+  const [project]: any = await con.query(
+    `select priejct_id from project where (create_user_id = ${newProjectInfo.createUserId} and unique_str = '${datetimeStr}');`
+  );
+  await con.query(
+    `insert into user_access_rights value (${newProjectInfo.createUserId}, ${project[0].project_id}, 1)`
+  );
+  return Promise.resolve();
+}
+
 export default {
   createConfig,
   getTasks,
@@ -137,4 +163,5 @@ export default {
   createTask,
   deleteTask,
   deleteTaskGroup,
+  createProject,
 } as const;

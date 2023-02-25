@@ -89,6 +89,27 @@ app.get("/api/v1/projects", (req: Request, res: Response) => {
     });
 });
 
+app.post("/api/v1/project", (req: Request, res: Response) => {
+  console.log("session id: " + req.session.id);
+  auth
+    .checkSessionId(req.session.id)
+    .then((userId: number) => {
+      db.createProject({
+        projectName: req.body.projectName,
+        createUserId: userId,
+      })
+        .then(() => {
+          res.json({ hasError: false });
+        })
+        .catch((e) => {
+          res.json({ hasError: true, errorMsg: e });
+        });
+    })
+    .catch((e) => {
+      res.json({ hasError: true, errorMsg: e.errorType });
+    });
+});
+
 app.post("/auth/signin", (req: Request, res: Response) => {
   console.log(req.body);
   console.log("signin user session id: " + req.session.id);

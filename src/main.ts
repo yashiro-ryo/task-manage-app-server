@@ -66,14 +66,17 @@ app.get("/signup", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signup.html");
 });
 
+// プロジェクト一覧を返すエンドポイント
 app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
+  console.log("uid: " + res.locals.uid);
 });
 
+// プロジェクトを作成するエンドポイント
 app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
+  console.log("uid: " + res.locals.uid);
 });
 
+// tokenを検証するミドルウエア
 function verifyToken(req: Request, res: Response, next: NextFunction) {
   // headerからtokenを取得
   const authHeader = req.headers["authorization"];
@@ -87,11 +90,15 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
     .verifyFirebaseToken(token)
     .then((decodedToken) => {
       console.log("user id" + decodedToken.uid);
+      // 認証成功したので次にuidを渡す
+      res.locals.uid = decodedToken.uid;
+      next();
     })
     .catch((e) => {
       console.error(e);
+      // 認証失敗
+      res.status(401).json({ msg: "Unauthorized" });
     });
-  next();
 }
 
 const server = http.createServer(app);

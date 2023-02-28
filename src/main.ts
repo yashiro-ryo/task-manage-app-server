@@ -4,8 +4,6 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
-import { auth } from "./auth/auth";
-import { token } from "./auth/token";
 import { userRights } from "./auth/userAccessRights";
 import { firebaseAuth } from "./auth/firebaseAuth";
 
@@ -70,45 +68,10 @@ app.get("/signup", (req: Request, res: Response) => {
 
 app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
   console.log("session id: " + req.session.id);
-  auth
-    .checkSessionId(req.session.id)
-    .then((userId: number) => {
-      userRights
-        .getUserProjects(userId)
-        .then(
-          (projectInfos: Array<{ projectId: number; projectName: string }>) => {
-            console.log("response ok");
-            res.send({ hasError: false, data: projectInfos });
-          }
-        )
-        .catch(() => {
-          res.send({ hasError: true, errorMsg: "failed-authenticate-user" });
-        });
-    })
-    .catch((e) => {
-      res.json({ hasError: true, errorMsg: e.errorType });
-    });
 });
 
 app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
   console.log("session id: " + req.session.id);
-  auth
-    .checkSessionId(req.session.id)
-    .then((userId: number) => {
-      db.createProject({
-        projectName: req.body.projectName,
-        createUserId: userId,
-      })
-        .then(() => {
-          res.json({ hasError: false });
-        })
-        .catch((e) => {
-          res.json({ hasError: true, errorMsg: e });
-        });
-    })
-    .catch((e) => {
-      res.json({ hasError: true, errorMsg: e.errorType });
-    });
 });
 
 function verifyToken(req: Request, res: Response, next: NextFunction) {
@@ -130,93 +93,6 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
     });
   next();
 }
-
-app.post("/auth/signin", (req: Request, res: Response) => {
-  console.log(req.body);
-  console.log("signin user session id: " + req.session.id);
-  auth
-    .checkEmailAndPass(req.body.userEmail, req.body.userPassHashed)
-    .then((userId: number) => {
-      console.log("認証成功 :" + userId);
-      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
-      auth
-        .saveTokenAndSessionId(
-          tokens.accessToken,
-          tokens.refleshToken,
-          req.session.id,
-          userId
-        )
-        .then(() => {
-          res.send({
-            result: {
-              hasError: false,
-              errorMsg: "",
-            },
-          });
-        });
-    })
-    .catch((error) => {
-      console.error("auth error: " + error.errorType);
-      res.send({
-        result: { hasError: true, errorMsg: "認証に失敗しました。" },
-      });
-    });
-});
-
-app.post("/auth/signup", (req: Request, res: Response) => {
-  console.log(req.body);
-  console.log("signup user session id: " + req.session.id);
-  auth
-    .createUser(req.body.userName, req.body.userEmail, req.body.userPassHashed)
-    .then((userId: number) => {
-      console.log("crfeated user id = " + userId);
-      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
-      auth
-        .saveTokenAndSessionId(
-          tokens.accessToken,
-          tokens.refleshToken,
-          req.session.id,
-          userId
-        )
-        .then(() => {
-          res.send({ result: { hasError: false } });
-        })
-        .catch((e) => {
-          res.send({ result: { hasError: true, errorType: e.errorType } });
-        });
-    })
-    .catch((err) => {
-      if (err.errorType === "this-user-has-already-exist") {
-        res.send({
-          result: {
-            hasError: true,
-            errorMsg: "ユーザーがすでに存在します。ログインしてください。",
-          },
-        });
-      } else {
-        console.log(err);
-        res.send({
-          result: {
-            hasError: true,
-            errorMsg: "予期しないエラーが発生しました。",
-          },
-        });
-      }
-    });
-});
-
-app.get("/auth/signout", (req: Request, res: Response) => {
-  console.log("called signout");
-  console.log("session id: ", req.session.id);
-  auth
-    .doSignout(req.session.id)
-    .then(() => {
-      res.send({ result: { hasError: false, errorMsg: "" } });
-    })
-    .catch((e) => {
-      res.send({ result: { hasError: true, errorMsg: e } });
-    });
-});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -253,17 +129,7 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("a user connected");
   console.log(socket.request.session.id);
-  auth
-    .checkSessionId(socket.request.session.id)
-    .then((userId: number) => {
-      console.log("sucessful authenticate user");
-      socketEvents(socket, userId);
-    })
-    .catch((error) => {
-      console.log(error.errorType);
-      socket.emit("error-failed-authenticate-user");
-      socket.disconnect();
-    });
+  socketEvents(socket, 1);
 });
 
 function socketEvents(socket: Socket, userId: number) {

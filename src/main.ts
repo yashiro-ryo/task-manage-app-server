@@ -7,6 +7,7 @@ import db from "./repo/database";
 import { auth } from "./auth/auth";
 import { token } from "./auth/token";
 import { userRights } from "./auth/userAccessRights";
+import { firebaseAuth } from "./auth/firebaseAuth";
 
 declare module "http" {
   interface IncomingMessage {
@@ -67,7 +68,7 @@ app.get("/signup", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signup.html");
 });
 
-app.get("/api/v1/projects", (req: Request, res: Response) => {
+app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
   console.log("session id: " + req.session.id);
   auth
     .checkSessionId(req.session.id)
@@ -89,7 +90,7 @@ app.get("/api/v1/projects", (req: Request, res: Response) => {
     });
 });
 
-app.post("/api/v1/project", (req: Request, res: Response) => {
+app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
   console.log("session id: " + req.session.id);
   auth
     .checkSessionId(req.session.id)
@@ -109,6 +110,26 @@ app.post("/api/v1/project", (req: Request, res: Response) => {
       res.json({ hasError: true, errorMsg: e.errorType });
     });
 });
+
+function verifyToken(req: Request, res: Response, next: NextFunction) {
+  // headerからtokenを取得
+  const authHeader = req.headers["authorization"];
+  if (authHeader === undefined) {
+    return;
+  }
+  const bearerToken = authHeader.split(" ");
+  const token = bearerToken[1];
+  // token検証
+  firebaseAuth
+    .verifyFirebaseToken(token)
+    .then((decodedToken) => {
+      console.log("user id" + decodedToken.uid);
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+  next();
+}
 
 app.post("/auth/signin", (req: Request, res: Response) => {
   console.log(req.body);
@@ -205,13 +226,28 @@ const io = new Server(server, {
   },
 });
 
-io.use((socket, next) =>
+io.use((socket, next) => {
   sessionMiddleware(
     socket.request as Request,
     {} as Response,
     next as NextFunction
-  )
-);
+  );
+  const token = socket.handshake.auth.token;
+  console.log("socket.io handshake token : " + token);
+  // token認証
+  firebaseAuth
+    .verifyFirebaseToken(token)
+    .then((decodedToken) => {
+      console.log(decodedToken.uid);
+      // 認証成功
+      next();
+    })
+    .catch((e) => {
+      console.error(e);
+      // 認証失敗
+      socket.disconnect();
+    });
+});
 
 //クライアントと通信
 io.on("connection", (socket) => {

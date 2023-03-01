@@ -22,7 +22,7 @@
     "ts-jest": "^29.0.5"
   },
   "scripts": {
-    "dev": "FIREBASE_CONFIG='keys/task-manage-app-1cb7a-firebase-adminsdk-mqez7-9784b5b4d1.json' GOOGLE_CLOUD_PROJECT='task-manage-app' NODE_ENV='dev' nodemon",
+    "dev": "NODE_ENV='dev' nodemon",
     "prod": "NODE_ENV='prod' ts-node src/main.ts",
     "lint-fix": "eslint --cache --fix src/ && prettier --write src/",
     "test": "jest"

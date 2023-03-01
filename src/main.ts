@@ -74,6 +74,21 @@ app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
 // プロジェクトを作成するエンドポイント
 app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
   console.log("uid: " + res.locals.uid);
+  db.createProject({
+    projectName: req.body.projectName,
+    ownerUserId: res.locals.uid,
+  })
+    .then((projects) => {
+      res.status(200).json({
+        projects,
+      });
+    })
+    .catch((e) => {
+      console.error(e);
+      res.status(400).json({
+        msg: "Bad Request",
+      });
+    });
 });
 
 // tokenを検証するミドルウエア

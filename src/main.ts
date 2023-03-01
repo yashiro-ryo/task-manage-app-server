@@ -69,6 +69,15 @@ app.get("/signup", (req: Request, res: Response) => {
 // プロジェクト一覧を返すエンドポイント
 app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
   console.log("uid: " + res.locals.uid);
+  db.getProject(res.locals.uid)
+    .then((projects) => {
+      console.log(projects);
+      res.status(200).json({ projects });
+    })
+    .catch((e) => {
+      console.log(e);
+      res.status(500).json({ msg: "server error" });
+    });
 });
 
 // プロジェクトを作成するエンドポイント

@@ -163,6 +163,29 @@ async function createProject(newProjectInfo: ProjectInfo) {
   return projects;
 }
 
+async function getProject(uid: string) {
+  // db接続
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  const [canShowProjects]: any = await con.query(
+    `select * from user_access_right where user_id = '${uid}';`
+  );
+  console.log(canShowProjects);
+  const query = `select * from projects where `;
+  let queryParts = "";
+  for (let i = 0; i < canShowProjects.length; i++) {
+    queryParts += `project_id = ${canShowProjects[i].project_id}`;
+    if (canShowProjects.length > 0 && i !== canShowProjects.length - 1) {
+      queryParts += ` or `;
+    }
+  }
+  const [projects]: any = await con.query(query + queryParts + ";");
+  return projects;
+}
+
 export default {
   createConfig,
   getTasks,
@@ -171,4 +194,5 @@ export default {
   deleteTask,
   deleteTaskGroup,
   createProject,
+  getProject,
 } as const;

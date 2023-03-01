@@ -79,26 +79,25 @@ app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
 // tokenを検証するミドルウエア
 function verifyToken(req: Request, res: Response, next: NextFunction) {
   // headerからtokenを取得
-  const authHeader = req.headers["authorization"];
-  if (authHeader === undefined) {
-    return;
+  const token = req.headers["authorization"];
+  if (token) {
+    // token検証
+    firebaseAuth
+      .verifyFirebaseToken(token)
+      .then((decodedToken) => {
+        console.log("user id" + decodedToken.uid);
+        // 認証成功したので次にuidを渡す
+        res.locals.uid = decodedToken.uid;
+        next();
+      })
+      .catch((e) => {
+        console.error(e);
+        // 認証失敗
+        res.status(401).json({ msg: "Unauthorized" });
+      });
+  } else {
+    res.status(400).json({ msg: "Bad Request" });
   }
-  const bearerToken = authHeader.split(" ");
-  const token = bearerToken[1];
-  // token検証
-  firebaseAuth
-    .verifyFirebaseToken(token)
-    .then((decodedToken) => {
-      console.log("user id" + decodedToken.uid);
-      // 認証成功したので次にuidを渡す
-      res.locals.uid = decodedToken.uid;
-      next();
-    })
-    .catch((e) => {
-      console.error(e);
-      // 認証失敗
-      res.status(401).json({ msg: "Unauthorized" });
-    });
 }
 
 const server = http.createServer(app);

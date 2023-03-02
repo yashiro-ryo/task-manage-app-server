@@ -41,7 +41,7 @@ async function getTasks(projectId: number) {
   const con = await mysql.createConnection(dbConfig);
   // project の内容を取得
   const [getProjectInfoResult]: any = await con.query(
-    `select * from project where project_id = ${projectId}`
+    `select * from projects where project_id = ${projectId}`
   );
   console.log(getProjectInfoResult);
   if (getProjectInfoResult.length !== 1) {
@@ -54,7 +54,7 @@ async function getTasks(projectId: number) {
   );
   console.log(getTaskGroupResult);
   if (getTaskGroupResult.length < 1) {
-    throw new Error("cannot found task group");
+    return Promise.resolve([]);
   }
   // taskの取得と結果オブジェクトの生成
   const taskResults = [];
@@ -132,28 +132,58 @@ async function deleteTaskGroup(taskGroupId: number) {
 
 type ProjectInfo = {
   projectName: string;
-  createUserId: number;
+  ownerUserId: string;
 };
 
 async function createProject(newProjectInfo: ProjectInfo) {
+  // db接続
   const dbConfig = createConfig();
   if (dbConfig === null) {
     throw new Error("cannot create config file");
   }
   const con = await mysql.createConnection(dbConfig);
-  // projectを一意にするために日時を利用する
+  // 被らない数値を生成するために日時を利用する
   const date = new Date();
   const datetimeStr = date.toLocaleString();
+  // プロジェクトの情報をDBに登録する
   await con.query(
-    `insert into project value (null, '${newProjectInfo.projectName}', ${newProjectInfo.createUserId}, '${datetimeStr}');`
+    `insert into projects value (null, '${newProjectInfo.projectName}', '${newProjectInfo.ownerUserId}', '${datetimeStr}');`
   );
+  // プロジェクトIdを取得する
   const [project]: any = await con.query(
-    `select priejct_id from project where (create_user_id = ${newProjectInfo.createUserId} and unique_str = '${datetimeStr}');`
+    `select project_id from projects where (owner_user_id = '${newProjectInfo.ownerUserId}' and unique_str = '${datetimeStr}');`
   );
+  // アクセス権限テーブルに記録する
   await con.query(
-    `insert into user_access_rights value (${newProjectInfo.createUserId}, ${project[0].project_id}, 1)`
+    `insert into user_access_right value ('${newProjectInfo.ownerUserId}', ${project[0].project_id})`
   );
-  return Promise.resolve();
+  const [projects]: any = await con.query(
+    `select * from projects where project_id = ${project[0].project_id}`
+  );
+  return projects;
+}
+
+async function getProject(uid: string) {
+  // db接続
+  const dbConfig = createConfig();
+  if (dbConfig === null) {
+    throw new Error("cannot create config file");
+  }
+  const con = await mysql.createConnection(dbConfig);
+  const [canShowProjects]: any = await con.query(
+    `select * from user_access_right where user_id = '${uid}';`
+  );
+  console.log(canShowProjects);
+  const query = `select * from projects where `;
+  let queryParts = "";
+  for (let i = 0; i < canShowProjects.length; i++) {
+    queryParts += `project_id = ${canShowProjects[i].project_id}`;
+    if (canShowProjects.length > 0 && i !== canShowProjects.length - 1) {
+      queryParts += ` or `;
+    }
+  }
+  const [projects]: any = await con.query(query + queryParts + ";");
+  return projects;
 }
 
 export default {
@@ -164,4 +194,5 @@ export default {
   deleteTask,
   deleteTaskGroup,
   createProject,
+  getProject,
 } as const;

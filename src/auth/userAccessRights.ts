@@ -42,13 +42,14 @@ class UserAccessRights {
     return Promise.resolve(projectInfos);
   }
 
-  async checkUserRights(userId: number, projectId: number) {
+  async checkUserRights(userId: string, projectId: number) {
+    console.log("check access rights :" + userId + " " + projectId);
     if (this.con === undefined) {
       return Promise.reject({ errorType: "failed-initialize-connection" });
     }
 
     const [rights]: any = await this.con.query(
-      `select user_right from user_access_rights where (user_id = ${userId} and project_id = ${projectId});`
+      `select * from user_access_right where (user_id = '${userId}' and project_id = ${projectId});`
     );
 
     if (rights.length === 0) {

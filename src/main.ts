@@ -177,7 +177,7 @@ function socketEvents(socket: Socket, userId: string) {
       console.log(data);
       db.createGroup(data.projectId, data.groupName)
         .then(() => {
-          console.log("成功");
+          console.log("successful create task group");
           sendTasksToClient(data.projectId, io, socket);
         })
         .catch((e: any) => {

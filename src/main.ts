@@ -139,7 +139,7 @@ io.use((socket, next) => {
     next as NextFunction
   );
   const token = socket.handshake.auth.token;
-  console.log("socket.io handshake token : " + token);
+  //console.log("socket.io handshake token : " + token);
   // token認証
   firebaseAuth
     .verifyFirebaseToken(token)
@@ -158,11 +158,13 @@ io.use((socket, next) => {
 //クライアントと通信
 io.on("connection", (socket) => {
   console.log("a user connected");
-  console.log(socket.request.session.id);
-  socketEvents(socket, 1);
+  const token = socket.handshake.auth.token;
+  firebaseAuth.verifyFirebaseToken(token).then((decodedToken) => {
+    socketEvents(socket, decodedToken.uid);
+  });
 });
 
-function socketEvents(socket: Socket, userId: number) {
+function socketEvents(socket: Socket, userId: string) {
   socket
     .on("create-new-task-group", (data: any) => {
       console.log("create new task");
@@ -214,6 +216,7 @@ function socketEvents(socket: Socket, userId: number) {
 }
 
 function sendTasksToClient(projectId: number, io: Server) {
+  console.log("get tasks ", projectId);
   db.getTasks(projectId)
     .then((taskResults: any) => {
       console.log("成功");

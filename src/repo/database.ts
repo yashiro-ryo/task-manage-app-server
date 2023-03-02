@@ -41,7 +41,7 @@ async function getTasks(projectId: number) {
   const con = await mysql.createConnection(dbConfig);
   // project の内容を取得
   const [getProjectInfoResult]: any = await con.query(
-    `select * from project where project_id = ${projectId}`
+    `select * from projects where project_id = ${projectId}`
   );
   console.log(getProjectInfoResult);
   if (getProjectInfoResult.length !== 1) {
@@ -54,7 +54,7 @@ async function getTasks(projectId: number) {
   );
   console.log(getTaskGroupResult);
   if (getTaskGroupResult.length < 1) {
-    throw new Error("cannot found task group");
+    return Promise.resolve([]);
   }
   // taskの取得と結果オブジェクトの生成
   const taskResults = [];

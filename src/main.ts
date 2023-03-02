@@ -159,7 +159,13 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("a user connected");
   const token = socket.handshake.auth.token;
+  const projectId = socket.handshake.query.projectId;
+  if (projectId === undefined) {
+    socket.disconnect();
+    return;
+  }
   firebaseAuth.verifyFirebaseToken(token).then((decodedToken) => {
+    socket.join(projectId);
     socketEvents(socket, decodedToken.uid);
   });
 });
@@ -172,7 +178,7 @@ function socketEvents(socket: Socket, userId: string) {
       db.createGroup(data.projectId, data.groupName)
         .then(() => {
           console.log("成功");
-          sendTasksToClient(data.projectId, io);
+          sendTasksToClient(data.projectId, io, socket);
         })
         .catch((e: any) => {
           console.log("create group error", e);
@@ -181,23 +187,29 @@ function socketEvents(socket: Socket, userId: string) {
     .on("create-task", (data: any) => {
       console.log("create task");
       console.log(data);
-      createTask(
+      db.createTask(
         data.projectId,
         data.taskGroupId,
         data.taskText,
         data.position
-      );
+      )
+        .then(() => {
+          sendTasksToClient(data.projectId, io, socket);
+        })
+        .catch((e) => {
+          console.log(e, "失敗");
+        });
     })
     .on("delete-task", (data: any) => {
       console.log("delete task");
       console.log(data);
       db.deleteTask(data.taskId).then(() => {
-        sendTasksToClient(data.projectId, io);
+        sendTasksToClient(data.projectId, io, socket);
       });
     })
     .on("delete-taskgroup", (data: any) => {
       db.deleteTaskGroup(data.taskGroupId).then(() => {
-        sendTasksToClient(data.projectId, io);
+        sendTasksToClient(data.projectId, io, socket);
       });
     })
     .on("get-tasks", (data: any) => {
@@ -207,7 +219,7 @@ function socketEvents(socket: Socket, userId: string) {
       userRights
         .checkUserRights(userId, data.projectId)
         .then(() => {
-          sendTasksToClient(data.projectId, io);
+          sendTasksToClient(data.projectId, io, socket);
         })
         .catch(() => {
           socket.emit("error-invalid-projectId");
@@ -215,37 +227,22 @@ function socketEvents(socket: Socket, userId: string) {
     });
 }
 
-function sendTasksToClient(projectId: number, io: Server) {
+function sendTasksToClient(projectId: number, io: Server, socket: Socket) {
   console.log("get tasks ", projectId);
+  const projectIdStr = String(projectId);
   db.getTasks(projectId)
     .then((taskResults: any) => {
-      console.log("成功");
-      console.log(taskResults);
-      io.emit("init-tasks", taskResults);
+      // ルーム内のユーザー全員に配信
+      io.to(projectIdStr).emit("init-tasks", taskResults);
     })
     .catch((e: { errorType: string }) => {
       console.error(e);
       if (e.errorType === "invalid-projectId") {
         // TODO: ioだと接続しているユーザー全てに配信されてしまうので修正する
-        io.emit("error-invalid-projectId");
+        socket.emit("error-invalid-projectId");
       } else {
-        io.emit("error");
+        socket.emit("error");
       }
-    });
-}
-
-function createTask(
-  projectId: number,
-  taskGroupId: number,
-  taskText: string,
-  taskPosition: number
-) {
-  db.createTask(projectId, taskGroupId, taskText, taskPosition)
-    .then(() => {
-      sendTasksToClient(projectId, io);
-    })
-    .catch((e) => {
-      console.log(e, "失敗");
     });
 }
 

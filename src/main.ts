@@ -4,9 +4,8 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import db from "./repo/database";
-import { auth } from "./auth/auth";
-import { token } from "./auth/token";
 import { userRights } from "./auth/userAccessRights";
+import { firebaseAuth } from "./auth/firebaseAuth";
 
 declare module "http" {
   interface IncomingMessage {
@@ -67,135 +66,63 @@ app.get("/signup", (req: Request, res: Response) => {
   res.sendFile(__dirname + "/assets/html/signup.html");
 });
 
-app.get("/api/v1/projects", (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
-  auth
-    .checkSessionId(req.session.id)
-    .then((userId: number) => {
-      userRights
-        .getUserProjects(userId)
-        .then(
-          (projectInfos: Array<{ projectId: number; projectName: string }>) => {
-            console.log("response ok");
-            res.send({ hasError: false, data: projectInfos });
-          }
-        )
-        .catch(() => {
-          res.send({ hasError: true, errorMsg: "failed-authenticate-user" });
-        });
+// プロジェクト一覧を返すエンドポイント
+app.get("/api/v1/projects", verifyToken, (req: Request, res: Response) => {
+  console.log("uid: " + res.locals.uid);
+  db.getProject(res.locals.uid)
+    .then((projects) => {
+      console.log(projects);
+      res.status(200).json({ projects });
     })
     .catch((e) => {
-      res.json({ hasError: true, errorMsg: e.errorType });
+      console.log(e);
+      res.status(500).json({ msg: "server error" });
     });
 });
 
-app.post("/api/v1/project", (req: Request, res: Response) => {
-  console.log("session id: " + req.session.id);
-  auth
-    .checkSessionId(req.session.id)
-    .then((userId: number) => {
-      db.createProject({
-        projectName: req.body.projectName,
-        createUserId: userId,
-      })
-        .then(() => {
-          res.json({ hasError: false });
-        })
-        .catch((e) => {
-          res.json({ hasError: true, errorMsg: e });
-        });
+// プロジェクトを作成するエンドポイント
+app.post("/api/v1/project", verifyToken, (req: Request, res: Response) => {
+  console.log("uid: " + res.locals.uid);
+  db.createProject({
+    projectName: req.body.projectName,
+    ownerUserId: res.locals.uid,
+  })
+    .then((projects) => {
+      res.status(200).json({
+        projects,
+      });
     })
     .catch((e) => {
-      res.json({ hasError: true, errorMsg: e.errorType });
-    });
-});
-
-app.post("/auth/signin", (req: Request, res: Response) => {
-  console.log(req.body);
-  console.log("signin user session id: " + req.session.id);
-  auth
-    .checkEmailAndPass(req.body.userEmail, req.body.userPassHashed)
-    .then((userId: number) => {
-      console.log("認証成功 :" + userId);
-      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
-      auth
-        .saveTokenAndSessionId(
-          tokens.accessToken,
-          tokens.refleshToken,
-          req.session.id,
-          userId
-        )
-        .then(() => {
-          res.send({
-            result: {
-              hasError: false,
-              errorMsg: "",
-            },
-          });
-        });
-    })
-    .catch((error) => {
-      console.error("auth error: " + error.errorType);
-      res.send({
-        result: { hasError: true, errorMsg: "認証に失敗しました。" },
+      console.error(e);
+      res.status(400).json({
+        msg: "Bad Request",
       });
     });
 });
 
-app.post("/auth/signup", (req: Request, res: Response) => {
-  console.log(req.body);
-  console.log("signup user session id: " + req.session.id);
-  auth
-    .createUser(req.body.userName, req.body.userEmail, req.body.userPassHashed)
-    .then((userId: number) => {
-      console.log("crfeated user id = " + userId);
-      const tokens = token.createAccessTokenAndRefleshToken({ userId: userId });
-      auth
-        .saveTokenAndSessionId(
-          tokens.accessToken,
-          tokens.refleshToken,
-          req.session.id,
-          userId
-        )
-        .then(() => {
-          res.send({ result: { hasError: false } });
-        })
-        .catch((e) => {
-          res.send({ result: { hasError: true, errorType: e.errorType } });
-        });
-    })
-    .catch((err) => {
-      if (err.errorType === "this-user-has-already-exist") {
-        res.send({
-          result: {
-            hasError: true,
-            errorMsg: "ユーザーがすでに存在します。ログインしてください。",
-          },
-        });
-      } else {
-        console.log(err);
-        res.send({
-          result: {
-            hasError: true,
-            errorMsg: "予期しないエラーが発生しました。",
-          },
-        });
-      }
-    });
-});
-
-app.get("/auth/signout", (req: Request, res: Response) => {
-  console.log("called signout");
-  console.log("session id: ", req.session.id);
-  auth
-    .doSignout(req.session.id)
-    .then(() => {
-      res.send({ result: { hasError: false, errorMsg: "" } });
-    })
-    .catch((e) => {
-      res.send({ result: { hasError: true, errorMsg: e } });
-    });
-});
+// tokenを検証するミドルウエア
+function verifyToken(req: Request, res: Response, next: NextFunction) {
+  // headerからtokenを取得
+  const token = req.headers["authorization"];
+  if (token) {
+    // token検証
+    firebaseAuth
+      .verifyFirebaseToken(token)
+      .then((decodedToken) => {
+        console.log("user id" + decodedToken.uid);
+        // 認証成功したので次にuidを渡す
+        res.locals.uid = decodedToken.uid;
+        next();
+      })
+      .catch((e) => {
+        console.error(e);
+        // 認証失敗
+        res.status(401).json({ msg: "Unauthorized" });
+      });
+  } else {
+    res.status(400).json({ msg: "Bad Request" });
+  }
+}
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -205,40 +132,53 @@ const io = new Server(server, {
   },
 });
 
-io.use((socket, next) =>
+io.use((socket, next) => {
   sessionMiddleware(
     socket.request as Request,
     {} as Response,
     next as NextFunction
-  )
-);
-
-//クライアントと通信
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  console.log(socket.request.session.id);
-  auth
-    .checkSessionId(socket.request.session.id)
-    .then((userId: number) => {
-      console.log("sucessful authenticate user");
-      socketEvents(socket, userId);
+  );
+  const token = socket.handshake.auth.token;
+  //console.log("socket.io handshake token : " + token);
+  // token認証
+  firebaseAuth
+    .verifyFirebaseToken(token)
+    .then((decodedToken) => {
+      console.log(decodedToken.uid);
+      // 認証成功
+      next();
     })
-    .catch((error) => {
-      console.log(error.errorType);
-      socket.emit("error-failed-authenticate-user");
+    .catch((e) => {
+      console.error(e);
+      // 認証失敗
       socket.disconnect();
     });
 });
 
-function socketEvents(socket: Socket, userId: number) {
+//クライアントと通信
+io.on("connection", (socket) => {
+  console.log("a user connected");
+  const token = socket.handshake.auth.token;
+  const projectId = socket.handshake.query.projectId;
+  if (projectId === undefined) {
+    socket.disconnect();
+    return;
+  }
+  firebaseAuth.verifyFirebaseToken(token).then((decodedToken) => {
+    socket.join(projectId);
+    socketEvents(socket, decodedToken.uid);
+  });
+});
+
+function socketEvents(socket: Socket, userId: string) {
   socket
     .on("create-new-task-group", (data: any) => {
       console.log("create new task");
       console.log(data);
       db.createGroup(data.projectId, data.groupName)
         .then(() => {
-          console.log("成功");
-          sendTasksToClient(data.projectId, io);
+          console.log("successful create task group");
+          sendTasksToClient(data.projectId, io, socket);
         })
         .catch((e: any) => {
           console.log("create group error", e);
@@ -247,23 +187,29 @@ function socketEvents(socket: Socket, userId: number) {
     .on("create-task", (data: any) => {
       console.log("create task");
       console.log(data);
-      createTask(
+      db.createTask(
         data.projectId,
         data.taskGroupId,
         data.taskText,
         data.position
-      );
+      )
+        .then(() => {
+          sendTasksToClient(data.projectId, io, socket);
+        })
+        .catch((e) => {
+          console.log(e, "失敗");
+        });
     })
     .on("delete-task", (data: any) => {
       console.log("delete task");
       console.log(data);
       db.deleteTask(data.taskId).then(() => {
-        sendTasksToClient(data.projectId, io);
+        sendTasksToClient(data.projectId, io, socket);
       });
     })
     .on("delete-taskgroup", (data: any) => {
       db.deleteTaskGroup(data.taskGroupId).then(() => {
-        sendTasksToClient(data.projectId, io);
+        sendTasksToClient(data.projectId, io, socket);
       });
     })
     .on("get-tasks", (data: any) => {
@@ -273,7 +219,7 @@ function socketEvents(socket: Socket, userId: number) {
       userRights
         .checkUserRights(userId, data.projectId)
         .then(() => {
-          sendTasksToClient(data.projectId, io);
+          sendTasksToClient(data.projectId, io, socket);
         })
         .catch(() => {
           socket.emit("error-invalid-projectId");
@@ -281,36 +227,22 @@ function socketEvents(socket: Socket, userId: number) {
     });
 }
 
-function sendTasksToClient(projectId: number, io: Server) {
+function sendTasksToClient(projectId: number, io: Server, socket: Socket) {
+  console.log("get tasks ", projectId);
+  const projectIdStr = String(projectId);
   db.getTasks(projectId)
     .then((taskResults: any) => {
-      console.log("成功");
-      console.log(taskResults);
-      io.emit("init-tasks", taskResults);
+      // ルーム内のユーザー全員に配信
+      io.to(projectIdStr).emit("init-tasks", taskResults);
     })
     .catch((e: { errorType: string }) => {
       console.error(e);
       if (e.errorType === "invalid-projectId") {
         // TODO: ioだと接続しているユーザー全てに配信されてしまうので修正する
-        io.emit("error-invalid-projectId");
+        socket.emit("error-invalid-projectId");
       } else {
-        io.emit("error");
+        socket.emit("error");
       }
-    });
-}
-
-function createTask(
-  projectId: number,
-  taskGroupId: number,
-  taskText: string,
-  taskPosition: number
-) {
-  db.createTask(projectId, taskGroupId, taskText, taskPosition)
-    .then(() => {
-      sendTasksToClient(projectId, io);
-    })
-    .catch((e) => {
-      console.log(e, "失敗");
     });
 }
 
